@@ -1,0 +1,45 @@
+#include<stdio.h>
+#include<pthread.h>
+#include<semaphore.h>
+
+sem_t mutex;
+sem_t db;
+int studentcount=0;
+pthread_t student1,student2,teacher1,teacher2;
+void *student(void *);
+void *teacher(void *);
+main()
+{
+sem_init(&mutex,0,1);
+sem_init(&db,0,1);
+while(1)
+{
+pthread_create(&student1,NULL,student,"1");
+pthread_create(&student2,NULL,student,"2");
+pthread_create(&teacher1,NULL,teacher,"1");
+pthread_create(&teacher2,NULL,teacher,"2");
+}
+}
+void *student(void *p)
+{
+sem_wait(&mutex);
+studentcount++;
+if(studentcount==1) sem_wait(&db);
+sem_post(&mutex);
+printf("Student %s entered the queue\n",p);
+//sleep(3);
+sem_wait(&mutex);
+printf("Student %s got the book issued\n\n",p);
+studentcount--;
+if(studentcount==0) sem_post(&db);
+sem_post(&mutex);
+}
+
+void *teacher(void *p)
+{
+printf("Teacher entered the queue \n");
+sem_wait(&db);
+printf("Teacher %s got the book issued\n\n ",p);
+sem_post(&db);
+sleep(2);
+}
